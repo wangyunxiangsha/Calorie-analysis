@@ -1,6 +1,8 @@
 import { HealthMode, PrismaClient } from '@prisma/client';
 
-import * as bcrypt from 'bcryptjs';
+// require 避免生产环境缺少 @types/bcryptjs 时 ts-node 类型检查失败
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcryptjs') as typeof import('bcryptjs');
 
 import { baseFoods } from './seeds/base-foods';
 

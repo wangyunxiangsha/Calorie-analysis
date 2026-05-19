@@ -82,8 +82,16 @@ CORS_ORIGIN=https://你的-admin-xxx.zeabur.app
 2. 执行：
 
 ```bash
-npm run prisma:seed
+sh scripts/seed-zeabur.sh
 ```
+
+或（一行命令）：
+
+```bash
+TS_NODE_COMPILER_OPTIONS='{"module":"commonjs","moduleResolution":"node"}' npx ts-node --transpile-only --project tsconfig.seed.json prisma/seed.ts
+```
+
+（生产镜像无 devDependencies，不要用普通 `npm run prisma:seed`。）
 
 默认管理员：`admin` / `admin123`（生产请改 `ADMIN_DEFAULT_PASSWORD` 后重新 seed 或改库）。
 
@@ -171,7 +179,20 @@ apiBase: 'https://你的-api-域名.zeabur.app/api/v1',
 
 微信公众平台需配置 **request 合法域名** 为上述 HTTPS 域名。
 
-## 七、常见问题
+## 七、启动报错 `Cannot find module '/app/dist/main.js'`
+
+Nest 编译输出在 **`dist/src/main.js`**（不是 `dist/main.js`）。
+
+**任选一种修复：**
+
+1. **设置 → 启动命令** 改为：  
+   `npx prisma migrate deploy && node dist/src/main.js`
+2. 或 **设置 → 部署方式** 选 **Dockerfile**（仓库 `apps/api/Dockerfile` 已修正路径）。
+3. 拉取最新代码后重新部署（含 `apps/api/zbpack.json`）。
+
+---
+
+## 八、常见问题
 
 | 现象 | 处理 |
 |------|------|
@@ -181,6 +202,6 @@ apiBase: 'https://你的-api-域名.zeabur.app/api/v1',
 | 推代码不自动部署 | Settings → Git 查看分支是否为 `main`、Auto Deploy 是否开启 |
 | GitHub 搜不到仓库 | GitHub → Settings → Applications → Zeabur → 给仓库授权 |
 
-## 八、本地开发
+## 九、本地开发
 
 不设置 `PUBLIC_BASE_URL` 时，返回相对路径 `/uploads/meals/...`，由本机 `http://localhost:3000` 提供静态文件。

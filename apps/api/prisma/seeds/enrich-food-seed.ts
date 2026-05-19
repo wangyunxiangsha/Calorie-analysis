@@ -1,4 +1,4 @@
-import { mergeAliasList } from '../../src/modules/foods/food-matching.util';
+import { mergeAliasList } from './seed-alias.util';
 import { FOOD_ALIAS_REGISTRY } from './alias-registry';
 import { FOOD_ALIAS_REGISTRY_EXT } from './alias-registry-ext';
 
