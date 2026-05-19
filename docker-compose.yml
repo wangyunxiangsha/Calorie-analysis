@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: calorie-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: calorie
+      POSTGRES_PASSWORD: calorie_dev
+      POSTGRES_DB: calorie_analysis
+    volumes:
+      - calorie_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calorie -d calorie_analysis"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  calorie_pg_data:

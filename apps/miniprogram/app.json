@@ -1,0 +1,49 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/trend/trend",
+    "pages/record/record",
+    "pages/profile/profile",
+    "pages/onboarding/onboarding",
+    "pages/confirm/confirm",
+    "pages/batch-confirm/batch-confirm",
+    "pages/recognition-result/recognition-result"
+  ],
+  "window": {
+    "navigationBarTitleText": "卡路里分析",
+    "navigationBarBackgroundColor": "#1b7a5a",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f7fa"
+  },
+  "tabBar": {
+    "color": "#666",
+    "selectedColor": "#1b7a5a",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "今日",
+        "iconPath": "assets/tab/home.png",
+        "selectedIconPath": "assets/tab/home-active.png"
+      },
+      {
+        "pagePath": "pages/trend/trend",
+        "text": "趋势",
+        "iconPath": "assets/tab/trend.png",
+        "selectedIconPath": "assets/tab/trend-active.png"
+      },
+      {
+        "pagePath": "pages/record/record",
+        "text": "记录",
+        "iconPath": "assets/tab/record.png",
+        "selectedIconPath": "assets/tab/record-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/tab/profile.png",
+        "selectedIconPath": "assets/tab/profile-active.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}

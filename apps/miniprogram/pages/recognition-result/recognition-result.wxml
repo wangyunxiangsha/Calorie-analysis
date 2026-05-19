@@ -1,0 +1,33 @@
+<view class="page">
+  <view class="card head-card">
+    <text class="head-title">请选择最接近的菜品</text>
+    <text class="head-sub" wx:if="{{provider}}">识别引擎：{{provider}}</text>
+    <text class="head-warn" wx:if="{{needsManualPick}}">置信度较低，建议核对后确认或手动搜索</text>
+  </view>
+
+  <view class="card">
+    <view
+      class="candidate {{item.canConfirm ? '' : 'unmatched'}}"
+      wx:for="{{candidates}}"
+      wx:key="name"
+      data-idx="{{index}}"
+      bindtap="onPickCandidate"
+    >
+      <view class="candidate-main">
+        <text class="candidate-name">{{item.name}}</text>
+        <text class="candidate-meta" wx:if="{{item.estimateText}}">{{item.estimateText}}</text>
+        <text class="candidate-tag" wx:if="{{item.canConfirm}}">已匹配食物库</text>
+        <text class="candidate-tag warn" wx:else>需手动选食物</text>
+      </view>
+      <view class="candidate-right">
+        <text class="confidence">{{item.confidencePct}}%</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="actions">
+    <button class="btn-secondary" bindtap="onManualSearch">都不是，手动搜索</button>
+    <button class="btn-link" bindtap="onReportWrong" loading="{{reporting}}">识别有误？反馈给我们</button>
+  </view>
+</view>

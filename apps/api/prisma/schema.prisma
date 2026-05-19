@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HealthMode {
+  lose_fat
+  gain_muscle
+  metabolic
+  pregnancy
+  wellness
+}
+
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
+}
+
+enum LogSource {
+  photo
+  manual
+  scan
+}
+
+enum RecognitionStatus {
+  pending
+  confirmed
+  rejected
+}
+
+model User {
+  id            String     @id @default(cuid())
+  openid        String     @unique
+  nickname      String?
+  avatarUrl     String?    @map("avatar_url")
+  gender        Int?       // 0 unknown 1 male 2 female
+  age           Int?
+  heightCm      Decimal?   @map("height_cm") @db.Decimal(5, 2)
+  weightKg      Decimal?   @map("weight_kg") @db.Decimal(5, 2)
+  activityLevel String?    @map("activity_level") // sedentary | light | moderate | active
+  healthMode    HealthMode @default(lose_fat) @map("health_mode")
+  targetWeightKg Decimal?  @map("target_weight_kg") @db.Decimal(5, 2)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  goals              UserGoal[]
+  foodLogs           FoodLog[]
+  recognitionTasks   RecognitionTask[]
+
+  @@map("users")
+}
+
+model UserGoal {
+  id        String     @id @default(cuid())
+  userId    String     @map("user_id")
+  healthMode HealthMode @map("health_mode")
+  targets   Json       // { calories, proteinG, carbsG, fatG, sodiumMg?, sugarG? }
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, active])
+  @@map("user_goals")
+}
+
+model Food {
+  id           String   @id @default(cuid())
+  name         String
+  category     String?
+  aliases      String[] @default([])
+  caloriesPer100g Decimal @map("calories_per_100g") @db.Decimal(8, 2)
+  proteinPer100g  Decimal @map("protein_per_100g") @db.Decimal(8, 2)
+  carbsPer100g    Decimal @map("carbs_per_100g") @db.Decimal(8, 2)
+  fatPer100g      Decimal @map("fat_per_100g") @db.Decimal(8, 2)
+  fiberPer100g    Decimal? @map("fiber_per_100g") @db.Decimal(8, 2)
+  sodiumMgPer100g Decimal? @map("sodium_mg_per_100g") @db.Decimal(8, 2)
+  sugarPer100g    Decimal? @map("sugar_per_100g") @db.Decimal(8, 2)
+  defaultServingG Decimal  @default(100) @map("default_serving_g") @db.Decimal(8, 2)
+  servingUnit     String   @default("份") @map("serving_unit")
+  enabled      Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  foodLogs           FoodLog[]
+  recognitionTasks   RecognitionTask[]
+
+  @@index([name])
+  @@map("foods")
+}
+
+model FoodLog {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  foodId     String    @map("food_id")
+  mealType   MealType  @map("meal_type")
+  source     LogSource
+  servingG   Decimal   @map("serving_g") @db.Decimal(8, 2)
+  logDate    DateTime  @map("log_date") @db.Date
+  calories   Decimal   @db.Decimal(8, 2)
+  proteinG   Decimal   @map("protein_g") @db.Decimal(8, 2)
+  carbsG     Decimal   @map("carbs_g") @db.Decimal(8, 2)
+  fatG       Decimal   @map("fat_g") @db.Decimal(8, 2)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  food Food @relation(fields: [foodId], references: [id])
+
+  @@index([userId, logDate])
+  @@map("food_logs")
+}
+
+model RecognitionTask {
+  id           String            @id @default(cuid())
+  userId       String            @map("user_id")
+  imageUrl     String            @map("image_url")
+  candidates   Json              // [{ name, confidence, foodId? }]
+  status       RecognitionStatus @default(pending)
+  chosenFoodId String?           @map("chosen_food_id")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chosenFood Food? @relation(fields: [chosenFoodId], references: [id])
+
+  @@index([userId])
+  @@map("recognition_tasks")
+}
+
+model ModeConfig {
+  id         String     @id @default(cuid())
+  healthMode HealthMode @unique @map("health_mode")
+  label      String
+  config     Json
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@map("mode_configs")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model RecognitionFeedback {
+  id              String   @id @default(cuid())
+  taskId          String?  @map("task_id")
+  reportedName    String   @map("reported_name")
+  suggestedFoodId String?  @map("suggested_food_id")
+  note            String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("recognition_feedback")
+}

@@ -1,0 +1,23 @@
+{
+  "name": "calorie-analysis",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/admin"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev -w @calorie/api",
+    "dev:admin": "npm run dev -w @calorie/admin",
+    "build:api": "npm run build -w @calorie/api",
+    "build:admin": "npm run build -w @calorie/admin",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:generate": "npm run prisma:generate -w @calorie/api",
+    "db:migrate": "npm run prisma:migrate -w @calorie/api",
+    "db:seed": "npm run prisma:seed -w @calorie/api",
+    "db:studio": "npm run prisma:studio -w @calorie/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

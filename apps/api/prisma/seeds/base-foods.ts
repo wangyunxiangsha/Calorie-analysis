@@ -1,0 +1,36 @@
+import type { FoodSeed } from './food-types';
+
+/** 项目初始种子（通用 + 部分中餐） */
+export const baseFoods: FoodSeed[] = [
+  { name: '宫保鸡丁', category: '家常菜', aliases: ['宫保鸡'], caloriesPer100g: 195, proteinPer100g: 12, carbsPer100g: 8, fatPer100g: 14, defaultServingG: 200, servingUnit: '份' },
+  { name: '麻婆豆腐', category: '家常菜', caloriesPer100g: 126, proteinPer100g: 8, carbsPer100g: 5, fatPer100g: 9, defaultServingG: 250, servingUnit: '份' },
+  { name: '番茄炒蛋', category: '家常菜', caloriesPer100g: 90, proteinPer100g: 6, carbsPer100g: 5, fatPer100g: 6, defaultServingG: 180, servingUnit: '份' },
+  { name: '清蒸鲈鱼', category: '家常菜', caloriesPer100g: 110, proteinPer100g: 18, carbsPer100g: 0, fatPer100g: 4, defaultServingG: 220, servingUnit: '份' },
+  { name: '红烧肉', category: '家常菜', caloriesPer100g: 320, proteinPer100g: 12, carbsPer100g: 8, fatPer100g: 28, defaultServingG: 150, servingUnit: '份' },
+  { name: '黄焖鸡米饭', category: '外卖', aliases: ['黄焖鸡'], caloriesPer100g: 145, proteinPer100g: 11, carbsPer100g: 15, fatPer100g: 5, defaultServingG: 450, servingUnit: '份' },
+  { name: '麻辣烫（素多）', category: '外卖', caloriesPer100g: 95, proteinPer100g: 5, carbsPer100g: 10, fatPer100g: 4, defaultServingG: 400, servingUnit: '碗' },
+  { name: '兰州牛肉面', category: '外卖', caloriesPer100g: 130, proteinPer100g: 8, carbsPer100g: 18, fatPer100g: 4, defaultServingG: 500, servingUnit: '碗' },
+  {
+    name: '刀削面',
+    category: '主食',
+    aliases: ['刀削', '山西刀削面', '刀削面肉末卤蛋', '肉末宽面汤', '宽面汤', '宽面', '肉末面'],
+    caloriesPer100g: 115,
+    proteinPer100g: 8,
+    carbsPer100g: 18,
+    fatPer100g: 4,
+    defaultServingG: 400,
+    servingUnit: '碗',
+  },
+  { name: '沙县拌面', category: '外卖', caloriesPer100g: 175, proteinPer100g: 6, carbsPer100g: 28, fatPer100g: 5, defaultServingG: 350, servingUnit: '份' },
+  { name: '麦当劳巨无霸', category: '连锁', caloriesPer100g: 250, proteinPer100g: 13, carbsPer100g: 20, fatPer100g: 14, defaultServingG: 220, servingUnit: '个' },
+  { name: '肯德基原味鸡', category: '连锁', caloriesPer100g: 240, proteinPer100g: 22, carbsPer100g: 8, fatPer100g: 14, defaultServingG: 150, servingUnit: '块' },
+  { name: '瑞幸拿铁', category: '饮品', caloriesPer100g: 45, proteinPer100g: 3, carbsPer100g: 4, fatPer100g: 2, defaultServingG: 350, servingUnit: '杯' },
+  { name: '全麦面包', category: '主食', caloriesPer100g: 250, proteinPer100g: 10, carbsPer100g: 42, fatPer100g: 4, defaultServingG: 60, servingUnit: '片' },
+  { name: '白米饭', category: '主食', caloriesPer100g: 116, proteinPer100g: 2.6, carbsPer100g: 26, fatPer100g: 0.3, defaultServingG: 200, servingUnit: '碗' },
+  { name: '煮鸡蛋', category: '主食', caloriesPer100g: 155, proteinPer100g: 13, carbsPer100g: 1, fatPer100g: 11, defaultServingG: 50, servingUnit: '个' },
+  { name: '燕麦牛奶', category: '早餐', caloriesPer100g: 75, proteinPer100g: 4, carbsPer100g: 10, fatPer100g: 2, defaultServingG: 300, servingUnit: '碗' },
+  { name: '希腊酸奶', category: '乳制品', caloriesPer100g: 97, proteinPer100g: 9, carbsPer100g: 4, fatPer100g: 5, defaultServingG: 150, servingUnit: '杯' },
+  { name: '苹果', category: '水果', caloriesPer100g: 52, proteinPer100g: 0.3, carbsPer100g: 14, fatPer100g: 0.2, defaultServingG: 180, servingUnit: '个' },
+  { name: '香蕉', category: '水果', caloriesPer100g: 89, proteinPer100g: 1.1, carbsPer100g: 23, fatPer100g: 0.3, defaultServingG: 120, servingUnit: '根' },
+  { name: '混合坚果', category: '零食', caloriesPer100g: 580, proteinPer100g: 18, carbsPer100g: 21, fatPer100g: 50, defaultServingG: 30, servingUnit: '把' },
+];

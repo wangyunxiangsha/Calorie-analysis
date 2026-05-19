@@ -1,0 +1,43 @@
+.page {
+  padding-bottom: 48rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 24rpx;
+  padding: 28rpx 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+}
+.section-title {
+  font-weight: 600;
+  font-size: 30rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1px solid #f5f5f5;
+  font-size: 28rpx;
+}
+.current-mode {
+  font-size: 32rpx;
+  color: #1a7f5a;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+.targets {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  font-size: 28rpx;
+  color: #444;
+}
+.privacy .p {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}

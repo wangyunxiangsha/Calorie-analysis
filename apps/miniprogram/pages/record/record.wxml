@@ -1,0 +1,78 @@
+<view class="page {{selectedCount ? 'has-bar' : ''}}">
+  <view class="actions card">
+    <button class="action-btn primary" bindtap="onPhoto">
+      <text class="action-title">拍照识别</text>
+      <text class="action-sub">拍摄菜品，确认后记录</text>
+    </button>
+  </view>
+
+  <view class="card search-card">
+    <view class="section-head">
+      <text class="section-title">手动添加</text>
+      <view class="mode-switch">
+        <view
+          class="mode-btn {{multiMode ? 'active' : ''}}"
+          data-multi="1"
+          bindtap="onSetMode"
+        >多选</view>
+        <view
+          class="mode-btn {{!multiMode ? 'active' : ''}}"
+          data-multi="0"
+          bindtap="onSetMode"
+        >单选</view>
+      </view>
+    </view>
+    <text class="mode-hint" wx:if="{{multiMode}}">点击食物勾选，选好后点底部「一起确认」</text>
+    <input
+      class="search-input"
+      placeholder="搜索食物，如：宫保鸡丁、米饭"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      confirm-type="search"
+      bindconfirm="doSearch"
+    />
+    <view class="food-list" wx:if="{{foods.length}}">
+      <view
+        class="food-item {{item.checked ? 'selected' : ''}}"
+        wx:for="{{foods}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onPickFood"
+      >
+        <view class="check-box" wx:if="{{multiMode}}">
+          <text class="check-mark">{{item.checked ? '✓' : ''}}</text>
+        </view>
+        <view class="food-info">
+          <text class="name">{{item.name}}</text>
+          <text class="meta">{{item.category || '其他'}} · {{item.caloriesPer100g}} kcal/100g</text>
+        </view>
+        <text class="arrow" wx:if="{{!multiMode}}">›</text>
+      </view>
+    </view>
+    <view class="empty" wx:elif="{{keyword && searched}}">
+      <text>未找到「{{keyword}}」，换个关键词试试</text>
+    </view>
+    <view class="empty" wx:elif="{{!keyword}}">
+      <text>输入关键词搜索，或从下方选择</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{recentFoods.length && !keyword}}">
+    <text class="section-title">最近常吃</text>
+    <view class="recent-row">
+      <view
+        class="recent-chip {{item.checked ? 'selected' : ''}}"
+        wx:for="{{recentFoods}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onPickFood"
+      >{{item.name}}</view>
+    </view>
+  </view>
+</view>
+
+<view class="batch-bar" wx:if="{{multiMode && selectedCount > 0}}">
+  <text class="batch-clear" bindtap="onClearSelected">清空</text>
+  <text class="batch-count">已选 {{selectedCount}} 项</text>
+  <button class="batch-btn" bindtap="goBatchConfirm">一起确认</button>
+</view>

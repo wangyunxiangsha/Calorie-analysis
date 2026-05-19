@@ -1,0 +1,34 @@
+<view class="page" wx:if="{{profile}}">
+  <view class="card profile-card">
+    <text class="section-title">身体数据</text>
+    <view class="row"><text>性别</text><text>{{genderText}}</text></view>
+    <view class="row"><text>年龄</text><text>{{profile.age || '—'}} 岁</text></view>
+    <view class="row"><text>身高</text><text>{{profile.heightCm || '—'}} cm</text></view>
+    <view class="row"><text>体重</text><text>{{profile.weightKg || '—'}} kg</text></view>
+    <button size="mini" bindtap="goEdit">修改资料</button>
+  </view>
+
+  <view class="card">
+    <text class="section-title">健康模式</text>
+    <view class="current-mode">{{modeLabel}}</view>
+    <picker mode="selector" range="{{modeLabels}}" bindchange="onModeChange">
+      <button size="mini">切换模式</button>
+    </picker>
+  </view>
+
+  <view class="card" wx:if="{{profile.dailyTargets}}">
+    <text class="section-title">今日目标</text>
+    <view class="targets">
+      <text>热量 {{profile.dailyTargets.calories}} kcal</text>
+      <text>蛋白 {{profile.dailyTargets.proteinG}} g</text>
+      <text>碳水 {{profile.dailyTargets.carbsG}} g</text>
+      <text>脂肪 {{profile.dailyTargets.fatG}} g</text>
+    </view>
+  </view>
+
+  <view class="card privacy">
+    <text class="section-title">隐私说明</text>
+    <text class="p">你的饮食记录仅本人可见，我们不会公开展示或出售个人饮食数据。</text>
+    <text class="p">代谢管理、孕产期相关提示仅供参考，不能替代医疗建议。</text>
+  </view>
+</view>

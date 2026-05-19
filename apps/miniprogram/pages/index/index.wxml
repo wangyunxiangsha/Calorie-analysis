@@ -1,0 +1,77 @@
+<view class="page" wx:if="{{summary && !loading}}">
+  <view class="mode-strip"></view>
+
+  <view class="date-nav card">
+    <view class="nav-btn" bindtap="onPrevDay">‹</view>
+    <picker mode="date" value="{{viewDate}}" end="{{maxDate}}" bindchange="onDateChange">
+      <view class="date-picker-hit">
+        <text class="date-label">{{dateLabel}}</text>
+        <text class="date-hint">点击选日期</text>
+      </view>
+    </picker>
+    <view class="nav-btn {{canGoNext ? '' : 'disabled'}}" bindtap="onNextDay">›</view>
+  </view>
+
+  <view class="page-header">
+    <view class="header-left">
+      <text class="mode-tag">{{modeLabel}}</text>
+      <text class="today-link" wx:if="{{!isToday}}" bindtap="onBackToday">回到今天</text>
+    </view>
+    <view class="status status-{{statusLevel}}">{{statusText}}</view>
+  </view>
+
+  <view class="card summary">
+    <view class="calorie-big">
+      <text class="num">{{summary.consumed.calories}}</text>
+      <text class="unit">/ {{summary.targets.calories}} kcal</text>
+    </view>
+    <progress percent="{{caloriePercent}}" stroke-width="10" activeColor="{{progressColor}}" backgroundColor="#eef2f5" />
+    <view class="remain">
+      <text wx:if="{{summary.remaining.calories >= 0}}">还可摄入约 {{summary.remaining.calories}} kcal</text>
+      <text wx:else class="over">已超出约 {{overCalories}} kcal</text>
+    </view>
+  </view>
+
+  <view class="card trend-entry" bindtap="goTrend">
+    <text class="trend-entry-title">7 日趋势</text>
+    <text class="trend-entry-sub">查看热量与蛋白走势 ›</text>
+  </view>
+
+  <view class="card macros-card">
+    <view class="macro-row" wx:for="{{macroBars}}" wx:key="key">
+      <text class="macro-label">{{item.label}}</text>
+      <view class="macro-bar-wrap">
+        <view class="macro-bar" style="width: {{item.percent}}%; background: {{item.color}}"></view>
+      </view>
+      <text class="macro-val">{{item.consumed}}/{{item.target}}{{item.unit}}</text>
+    </view>
+  </view>
+
+  <view class="card logs" wx:if="{{summary.logs.length}}">
+    <view class="logs-head">
+      <text class="section-title">{{logsTitle}}</text>
+      <text class="count">{{summary.logs.length}} 笔</text>
+    </view>
+    <view class="log-item" wx:for="{{summary.logs}}" wx:key="id">
+      <view class="log-left">
+        <text class="meal-tag">{{item.mealLabel}}</text>
+        <text class="log-name">{{item.food.name}}</text>
+      </view>
+      <text class="log-cal">{{item.calories}} kcal</text>
+    </view>
+  </view>
+
+  <view class="card empty-logs" wx:else>
+    <text class="empty-title">{{isToday ? '今天还没有记录' : '这一天还没有记录'}}</text>
+    <text class="empty-sub" wx:if="{{isToday}}">拍一张餐图或搜食物，3 秒完成一笔</text>
+    <button class="btn-add" wx:if="{{isToday}}" bindtap="goRecord">去记录</button>
+  </view>
+</view>
+
+<view class="card loading" wx:elif="{{loading}}">
+  <text>加载中…</text>
+</view>
+
+<view class="fab" wx:if="{{isToday}}" bindtap="goRecord">
+  <text>+</text>
+</view>

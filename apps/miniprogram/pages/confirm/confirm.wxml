@@ -1,0 +1,43 @@
+<view class="page" wx:if="{{food}}">
+  <view class="card food-head">
+    <text class="food-name">{{food.name}}</text>
+    <text class="food-meta">{{food.category || '食物'}} · 每100g {{food.caloriesPer100g}} kcal</text>
+  </view>
+
+  <view class="card">
+    <view class="field">
+      <text class="label">餐次</text>
+      <view class="meal-row">
+        <view
+          class="meal-chip {{mealType===item.id?'active':''}}"
+          wx:for="{{meals}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onMeal"
+        >{{item.label}}</view>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="label">份量 ({{food.servingUnit || '份'}})</text>
+      <view class="serving-row">
+        <button size="mini" bindtap="onServingMinus">−</button>
+        <text class="serving-val">{{servingG}} g</text>
+        <button size="mini" bindtap="onServingPlus">+</button>
+      </view>
+      <text class="hint">默认 1{{food.servingUnit}} ≈ {{food.defaultServingG}}g</text>
+    </view>
+  </view>
+
+  <view class="card preview">
+    <text class="section-title">本餐预估</text>
+    <view class="preview-grid">
+      <view class="pv"><text class="num">{{preview.calories}}</text><text class="unit">kcal</text></view>
+      <view class="pv"><text class="num">{{preview.proteinG}}g</text><text class="unit">蛋白</text></view>
+      <view class="pv"><text class="num">{{preview.carbsG}}g</text><text class="unit">碳水</text></view>
+      <view class="pv"><text class="num">{{preview.fatG}}g</text><text class="unit">脂肪</text></view>
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="onConfirm" loading="{{submitting}}">确认记录</button>
+</view>

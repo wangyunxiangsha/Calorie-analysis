@@ -1,0 +1,57 @@
+<view class="page">
+  <view class="card head-card">
+    <text class="section-title">摄入趋势</text>
+    <view class="days-switch">
+      <view
+        class="day-btn {{days === 7 ? 'active' : ''}}"
+        data-days="7"
+        bindtap="onSetDays"
+      >近 7 天</view>
+      <view
+        class="day-btn {{days === 14 ? 'active' : ''}}"
+        data-days="14"
+        bindtap="onSetDays"
+      >近 14 天</view>
+    </view>
+  </view>
+
+  <view class="card loading" wx:if="{{loading}}">
+    <text>加载中…</text>
+  </view>
+
+  <block wx:elif="{{trend && trendBars.length}}">
+    <view class="card">
+      <view class="trend-head">
+        <text class="range">{{trend.startDate}} ~ {{trend.endDate}}</text>
+        <text class="targets">目标 {{trend.targets.calories}} kcal · 蛋白 {{trend.targets.proteinG}}g</text>
+      </view>
+      <view class="trend-legend">
+        <text class="leg cal">热量</text>
+        <text class="leg pro">蛋白</text>
+      </view>
+      <view class="trend-chart">
+        <view
+          class="trend-col {{item.isToday ? 'today' : ''}}"
+          wx:for="{{trendBars}}"
+          wx:key="date"
+        >
+          <view class="bar-stack">
+            <view class="cal-bar-wrap">
+              <view class="cal-bar" style="height: {{item.calPercent}}%"></view>
+            </view>
+            <view class="pro-bar-wrap">
+              <view class="pro-bar" style="height: {{item.proPercent}}%"></view>
+            </view>
+          </view>
+          <text class="trend-val">{{item.calories}}</text>
+          <text class="day-label">周{{item.label}}</text>
+        </view>
+      </view>
+      <text class="trend-summary">{{trendSummary}}</text>
+    </view>
+  </block>
+
+  <view class="card empty" wx:else>
+    <text>暂无趋势数据，先去记录几餐吧</text>
+  </view>
+</view>

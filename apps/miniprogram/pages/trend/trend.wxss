@@ -1,0 +1,59 @@
+@import '../index/index.wxss';
+
+.page {
+  padding-bottom: 32rpx;
+}
+
+.head-card .section-title {
+  font-weight: 600;
+  font-size: 30rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.days-switch {
+  display: flex;
+  background: #f0f4f8;
+  border-radius: 32rpx;
+  padding: 4rpx;
+}
+
+.day-btn {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  padding: 12rpx 0;
+  border-radius: 28rpx;
+  color: #666;
+}
+
+.day-btn.active {
+  background: #fff;
+  color: #1b7a5a;
+  font-weight: 600;
+}
+
+.trend-head {
+  margin-bottom: 16rpx;
+}
+
+.range {
+  font-size: 28rpx;
+  font-weight: 600;
+  display: block;
+}
+
+.targets {
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 48rpx;
+  color: #888;
+  font-size: 28rpx;
+}

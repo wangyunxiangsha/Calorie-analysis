@@ -1,0 +1,45 @@
+@import '../confirm/confirm.wxss';
+
+.hint-top {
+  font-size: 24rpx;
+  color: #888;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.item-card {
+  padding: 24rpx 32rpx;
+}
+
+.item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.item-info {
+  flex: 1;
+}
+
+.remove {
+  font-size: 24rpx;
+  color: #c45c5c;
+  padding: 8rpx 0 8rpx 16rpx;
+}
+
+.item-card .food-name {
+  font-size: 30rpx;
+}
+
+.serving-row {
+  justify-content: flex-start;
+  gap: 20rpx;
+}
+
+.item-kcal {
+  margin-left: auto;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a7f5a;
+}

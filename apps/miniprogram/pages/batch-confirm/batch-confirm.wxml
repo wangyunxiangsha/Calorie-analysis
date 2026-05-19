@@ -1,0 +1,46 @@
+<view class="page" wx:if="{{items.length}}">
+  <view class="card">
+    <text class="section-title">共 {{items.length}} 项食物</text>
+    <text class="hint-top">统一餐次，可分别调整每项份量</text>
+    <view class="field">
+      <text class="label">餐次</text>
+      <view class="meal-row">
+        <view
+          class="meal-chip {{mealType===item.id?'active':''}}"
+          wx:for="{{meals}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onMeal"
+        >{{item.label}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card item-card" wx:for="{{items}}" wx:key="id" wx:for-index="idx">
+    <view class="item-head">
+      <view class="item-info">
+        <text class="food-name">{{item.name}}</text>
+        <text class="food-meta">{{item.category || '食物'}} · {{item.caloriesPer100g}} kcal/100g</text>
+      </view>
+      <text class="remove" data-idx="{{idx}}" bindtap="onRemove">移除</text>
+    </view>
+    <view class="serving-row">
+      <button size="mini" data-idx="{{idx}}" bindtap="onServingMinus">−</button>
+      <text class="serving-val">{{item.servingG}} g</text>
+      <button size="mini" data-idx="{{idx}}" bindtap="onServingPlus">+</button>
+      <text class="item-kcal">{{item.preview.calories}} kcal</text>
+    </view>
+  </view>
+
+  <view class="card preview">
+    <text class="section-title">合计预估</text>
+    <view class="preview-grid">
+      <view class="pv"><text class="num">{{totalPreview.calories}}</text><text class="unit">kcal</text></view>
+      <view class="pv"><text class="num">{{totalPreview.proteinG}}g</text><text class="unit">蛋白</text></view>
+      <view class="pv"><text class="num">{{totalPreview.carbsG}}g</text><text class="unit">碳水</text></view>
+      <view class="pv"><text class="num">{{totalPreview.fatG}}g</text><text class="unit">脂肪</text></view>
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="onConfirm" loading="{{submitting}}">确认记录全部</button>
+</view>

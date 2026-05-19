@@ -1,0 +1,60 @@
+<view class="page">
+  <view class="hero">
+    <text class="title">欢迎使用卡路里分析</text>
+    <text class="sub">填写基础信息，我们将按你的健康模式生成每日目标</text>
+  </view>
+
+  <view class="card">
+    <view class="field">
+      <text class="label">性别</text>
+      <radio-group class="row" bindchange="onGender">
+        <label class="chip"><radio value="1" checked="{{gender===1}}" />男</label>
+        <label class="chip"><radio value="2" checked="{{gender===2}}" />女</label>
+      </radio-group>
+    </view>
+
+    <view class="field">
+      <text class="label">年龄</text>
+      <input type="number" value="{{age}}" bindinput="onAge" placeholder="岁" />
+    </view>
+
+    <view class="field">
+      <text class="label">身高 (cm)</text>
+      <input type="digit" value="{{heightCm}}" bindinput="onHeight" placeholder="例如 170" />
+    </view>
+
+    <view class="field">
+      <text class="label">体重 (kg)</text>
+      <input type="digit" value="{{weightKg}}" bindinput="onWeight" placeholder="例如 65" />
+    </view>
+
+    <view class="field">
+      <text class="label">活动量</text>
+      <picker range="{{activityLabels}}" value="{{activityIndex}}" bindchange="onActivity">
+        <view class="picker">{{activityLabels[activityIndex]}}</view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="label">健康模式</text>
+      <view class="modes">
+        <view
+          class="mode-item {{healthMode===item.id?'active':''}}"
+          wx:for="{{modes}}"
+          wx:key="id"
+          data-id="{{item.id}}"
+          bindtap="onPickMode"
+        >
+          <text class="mode-name">{{item.label}}</text>
+          <text class="mode-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="disclaimer" wx:if="{{healthMode==='metabolic' || healthMode==='pregnancy'}}">
+      相关建议仅供参考，不能替代医疗诊断，请遵医嘱。
+    </view>
+  </view>
+
+  <button class="btn-primary" bindtap="onSubmit" loading="{{submitting}}">开始使用</button>
+</view>

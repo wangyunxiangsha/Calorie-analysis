@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>食光 · 卡路里分析 — 高保真原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #1b7a5a;
+      --brand-light: #e8f5ef;
+      --brand-dark: #0f5c42;
+      --bg: #f4f6f8;
+      --surface: #fff;
+      --text: #1a1d21;
+      --text-secondary: #6b7280;
+      --warn: #d97706;
+      --warn-bg: #fff7ed;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --macro-p: #3b82f6;
+      --macro-c: #f59e0b;
+      --macro-f: #8b5cf6;
+      --radius: 16px;
+      --phone-w: 390px;
+      --phone-h: 844px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: linear-gradient(145deg, #0f172a 0%, #1e3a2f 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 40px;
+      color: #e2e8f0;
+    }
+    .deck-title {
+      font-family: 'Fraunces', serif;
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #f8fafc;
+    }
+    .deck-sub {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      text-align: center;
+      max-width: 520px;
+    }
+    .screen-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      max-width: 900px;
+      margin-bottom: 24px;
+    }
+    .screen-nav button {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #cbd5e1;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .screen-nav button.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .phone-wrap {
+      position: relative;
+    }
+    .phone {
+      width: var(--phone-w);
+      height: var(--phone-h);
+      background: var(--bg);
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.45), 0 0 0 10px #1a1a1a;
+      position: relative;
+      color: var(--text);
+    }
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 34px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+    .screen {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      padding-top: 48px;
+      overflow-y: auto;
+      padding-bottom: 88px;
+    }
+    .screen.active { display: flex; }
+    .mode-stripe { height: 4px; background: var(--brand); flex-shrink: 0; }
+    .mode-stripe.muscle { background: #2563eb; }
+    .mode-stripe.metabolic { background: #7c3aed; }
+    .nav-bar {
+      padding: 8px 20px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-bar h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .nav-bar .sub { font-size: 12px; color: var(--text-secondary); font-weight: 400; }
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+    .pill.ok { background: var(--brand-light); color: var(--brand); }
+    .pill.warn { background: var(--warn-bg); color: var(--warn); }
+    .pill.over { background: var(--danger-bg); color: var(--danger); }
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      margin: 0 16px 12px;
+      padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .hero-cal {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    .hero-cal .big {
+      font-size: 40px;
+      font-weight: 700;
+      color: var(--brand-dark);
+      letter-spacing: -1px;
+    }
+    .hero-cal .unit { font-size: 16px; color: var(--text-secondary); font-weight: 500; }
+    .progress-track {
+      height: 10px;
+      background: #eef2f5;
+      border-radius: 5px;
+      margin: 16px 0 12px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand), #2d9b6a);
+      border-radius: 5px;
+      width: 71%;
+    }
+    .progress-fill.warn { background: linear-gradient(90deg, #f59e0b, #d97706); width: 92%; }
+    .remain {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--brand);
+    }
+    .macro-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .macro-row:last-child { margin-bottom: 0; }
+    .macro-label { width: 32px; color: var(--text-secondary); }
+    .macro-track {
+      flex: 1;
+      height: 8px;
+      background: #eef2f5;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .macro-fill { height: 100%; border-radius: 4px; }
+    .macro-val { width: 72px; text-align: right; font-size: 12px; color: var(--text-secondary); }
+    .section-h {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .section-h span { font-weight: 400; font-size: 12px; color: var(--text-secondary); }
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .meal-tag {
+      font-size: 11px;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-right: 8px;
+      color: var(--text-secondary);
+    }
+    .log-cal { font-weight: 600; color: var(--brand); }
+    .photo-cta {
+      margin: 0 16px 12px;
+      padding: 24px 20px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #1b7a5a 0%, #2d9b6a 100%);
+      color: #fff;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      cursor: pointer;
+    }
+    .photo-cta .icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .photo-cta h3 { font-size: 17px; margin-bottom: 4px; }
+    .photo-cta p { font-size: 13px; opacity: 0.85; }
+    .search {
+      margin: 0 16px 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .food-cell {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+    }
+    .food-cell:last-child { border-bottom: none; }
+    .food-cell .meta { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chip {
+      font-size: 13px;
+      padding: 8px 14px;
+      background: #f1f5f9;
+      border-radius: 20px;
+    }
+    .confirm-food { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .confirm-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .meal-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .meal-chips .chip { cursor: pointer; border: 2px solid transparent; }
+    .meal-chips .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .serving {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin: 16px 0 8px;
+    }
+    .serving button {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .serving .val { font-size: 28px; font-weight: 700; min-width: 100px; text-align: center; }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+    .preview-grid .n { font-size: 20px; font-weight: 700; color: var(--brand); }
+    .preview-grid .l { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+    .btn-fixed {
+      position: absolute;
+      bottom: 72px;
+      left: 16px;
+      right: 16px;
+      padding: 16px;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(27,122,90,0.35);
+    }
+    .tabbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 12px;
+      z-index: 50;
+    }
+    .tab {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+      cursor: pointer;
+    }
+    .tab.on { color: var(--brand); font-weight: 600; }
+    .tab .ico { font-size: 22px; display: block; margin-bottom: 2px; }
+    .fab {
+      position: absolute;
+      right: 20px;
+      bottom: 88px;
+      width: 56px;
+      height: 56px;
+      background: var(--brand);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 28px rgba(27,122,90,0.4);
+      z-index: 40;
+      cursor: pointer;
+    }
+    .onboard-hero {
+      margin: 0 16px;
+      padding: 28px 20px;
+      background: var(--brand-light);
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    .onboard-hero h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      color: var(--brand-dark);
+      margin-bottom: 8px;
+    }
+    .mode-card {
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .mode-card.on { border-color: var(--brand); background: var(--brand-light); }
+    .mode-card strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .mode-card span { font-size: 12px; color: var(--text-secondary); }
+    .recognize-img {
+      height: 160px;
+      margin: 0 16px 12px;
+      border-radius: var(--radius);
+      background: url('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600') center/cover;
+    }
+    .candidate {
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .candidate.on { border-color: var(--brand); background: var(--brand-light); }
+    .conf-bar { height: 4px; background: #eef2f5; border-radius: 2px; margin-top: 8px; }
+    .conf-fill { height: 100%; background: var(--brand); border-radius: 2px; }
+    .chart-placeholder {
+      height: 140px;
+      background: linear-gradient(180deg, var(--brand-light) 0%, transparent 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      padding: 0 12px 12px;
+    }
+    .chart-placeholder .bar {
+      width: 28px;
+      background: var(--brand);
+      border-radius: 6px 6px 0 0;
+      opacity: 0.7;
+    }
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+    }
+    .hint-doc {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #64748b;
+      text-align: center;
+    }
+    .hint-doc a { color: #6ee7b7; }
+  </style>
+</head>
+<body>
+  <h1 class="deck-title">食光 · 高保真原型</h1>
+  <p class="deck-sub">点击下方标签切换屏幕。完整标注见 <a href="../PROTOTYPE.md" style="color:#6ee7b7">PROTOTYPE.md</a></p>
+
+  <nav class="screen-nav" id="nav"></nav>
+
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="notch"></div>
+
+      <!-- 今日 -->
+      <div class="screen active" data-id="home">
+        <div class="mode-stripe"></div>
+        <div class="nav-bar">
+          <div><h1>5月17日 周六</h1><div class="sub">减脂模式</div></div>
+          <span class="pill ok">达标</span>
+        </div>
+        <div class="card hero-cal">
+          <div class="big">1286</div><span class="unit"> / 1800 kcal</span>
+          <div class="progress-track"><div class="progress-fill"></div></div>
+          <div class="remain">还可摄入 514 kcal</div>
+        </div>
+        <div class="card">
+          <div class="macro-row">
+            <span class="macro-label">蛋白</span>
+            <div class="macro-track"><div class="macro-fill" style="width:65%;background:var(--macro-p)"></div></div>
+            <span class="macro-val">62/95g</span>
+          </div>
+          <div class="macro-row">
+            <span class="macro-label">碳水</span>
+            <div class="macro-track"><div class="macro-fill" style="width:78%;background:var(--macro-c)"></div></div>
+            <span class="macro-val">140/180g</span>
+          </div>
+          <div class="macro-row">
+            <span class="macro-label">脂肪</span>
+            <div class="macro-track"><div class="macro-fill" style="width:76%;background:var(--macro-f)"></div></div>
+            <span class="macro-val">42/55g</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-h">今日记录 <span>2 笔</span></div>
+          <div class="log-item">
+            <div><span class="meal-tag">午餐</span>宫保鸡丁</div>
+            <span class="log-cal">390 kcal</span>
+          </div>
+          <div class="log-item">
+            <div><span class="meal-tag">早餐</span>燕麦牛奶</div>
+            <span class="log-cal">225 kcal</span>
+          </div>
+        </div>
+        <div class="fab">+</div>
+        <nav class="tabbar">
+          <div class="tab on"><span class="ico">◉</span>今日</div>
+          <div class="tab"><span class="ico">◎</span>记录</div>
+          <div class="tab"><span class="ico">◎</span>我的</div>
+        </nav>
+      </div>
+
+      <!-- 今日-注意 -->
+      <div class="screen" data-id="home-warn">
+        <div class="mode-stripe"></div>
+        <div class="nav-bar">
+          <div><h1>5月17日 周六</h1><div class="sub">减脂模式</div></div>
+          <span class="pill warn">注意</span>
+        </div>
+        <div class="card hero-cal">
+          <div class="big">1656</div><span class="unit"> / 1800 kcal</span>
+          <div class="progress-track"><div class="progress-fill warn"></div></div>
+          <div class="remain" style="color:var(--warn)">还剩 144 kcal</div>
+        </div>
+        <div class="card" style="text-align:center;color:var(--text-secondary);font-size:14px;padding:32px">
+          接近今日上限，晚餐建议清淡少油
+        </div>
+        <nav class="tabbar">
+          <div class="tab on"><span class="ico">◉</span>今日</div>
+          <div class="tab"><span class="ico">◎</span>记录</div>
+          <div class="tab"><span class="ico">◎</span>我的</div>
+        </nav>
+      </div>
+
+      <!-- 记录 -->
+      <div class="screen" data-id="record">
+        <div class="nav-bar"><h1>添加记录</h1></div>
+        <div class="photo-cta">
+          <div class="icon">📷</div>
+          <div><h3>拍照记录</h3><p>识别菜品，确认后保存</p></div>
+        </div>
+        <div class="search">🔍 搜索食物，如宫保鸡丁、米饭</div>
+        <div class="card">
+          <div class="section-h">搜索结果</div>
+          <div class="food-cell"><div><strong>宫保鸡丁</strong><div class="meta">家常菜 · 195 kcal/100g</div></div><span>›</span></div>
+          <div class="food-cell"><div><strong>麻婆豆腐</strong><div class="meta">家常菜 · 126 kcal/100g</div></div><span>›</span></div>
+        </div>
+        <div class="card">
+          <div class="section-h">最近常吃</div>
+          <div class="chips">
+            <span class="chip">白米饭</span>
+            <span class="chip">煮鸡蛋</span>
+            <span class="chip">瑞幸拿铁</span>
+          </div>
+        </div>
+        <nav class="tabbar">
+          <div class="tab"><span class="ico">◎</span>今日</div>
+          <div class="tab on"><span class="ico">◉</span>记录</div>
+          <div class="tab"><span class="ico">◎</span>我的</div>
+        </nav>
+      </div>
+
+      <!-- 识别 -->
+      <div class="screen" data-id="recognize">
+        <div class="nav-bar"><h1>识别结果</h1></div>
+        <div class="recognize-img"></div>
+        <div class="card">
+          <div class="section-h">为您识别到</div>
+          <div class="candidate on">
+            <strong>宫保鸡丁</strong>
+            <div class="conf-bar"><div class="conf-fill" style="width:92%"></div></div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:6px">约 390 kcal · 1份</div>
+          </div>
+          <div class="candidate">
+            <strong>鱼香肉丝</strong>
+            <div class="conf-bar"><div class="conf-fill" style="width:58%"></div></div>
+          </div>
+          <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--brand);cursor:pointer">都不对？手动搜索</p>
+        </div>
+        <button class="btn-fixed">下一步：确认记录</button>
+      </div>
+
+      <!-- 确认 -->
+      <div class="screen" data-id="confirm">
+        <div class="nav-bar"><h1>确认记录</h1></div>
+        <div class="card">
+          <div class="confirm-food">宫保鸡丁</div>
+          <div class="confirm-meta">家常菜 · 每100g 195 kcal</div>
+          <div class="section-h" style="font-size:13px">餐次</div>
+          <div class="meal-chips">
+            <span class="chip">早餐</span>
+            <span class="chip on">午餐</span>
+            <span class="chip">晚餐</span>
+            <span class="chip">加餐</span>
+          </div>
+          <div class="section-h" style="font-size:13px">份量</div>
+          <div class="serving">
+            <button>−</button>
+            <span class="val">200 g</span>
+            <button>+</button>
+          </div>
+          <p style="text-align:center;font-size:12px;color:var(--text-secondary)">默认 1份 ≈ 200g</p>
+        </div>
+        <div class="card">
+          <div class="section-h">本餐预估</div>
+          <div class="preview-grid">
+            <div><div class="n">390</div><div class="l">kcal</div></div>
+            <div><div class="n">23g</div><div class="l">蛋白</div></div>
+            <div><div class="n">31g</div><div class="l">碳水</div></div>
+            <div><div class="n">28g</div><div class="l">脂肪</div></div>
+          </div>
+        </div>
+        <button class="btn-fixed">确认记录</button>
+      </div>
+
+      <!-- 引导 -->
+      <div class="screen" data-id="onboarding">
+        <div class="onboard-hero">
+          <h2>欢迎使用食光</h2>
+          <p style="font-size:14px;color:var(--text-secondary)">填写资料，生成你的每日营养目标</p>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="mode-card on">
+            <strong>减脂</strong>
+            <span>控制热量缺口，关注剩余额度</span>
+          </div>
+          <div class="mode-card">
+            <strong>增肌塑形</strong>
+            <span>蛋白优先，支持训练日饮食</span>
+          </div>
+          <div class="mode-card">
+            <strong>代谢管理</strong>
+            <span>关注糖、钠等指标（非医疗建议）</span>
+          </div>
+        </div>
+        <button class="btn-fixed">开始使用</button>
+      </div>
+
+      <!-- 我的 -->
+      <div class="screen" data-id="profile">
+        <div class="nav-bar"><h1>我的</h1></div>
+        <div class="card">
+          <div class="section-h">身体数据</div>
+          <div class="profile-row"><span>体重</span><span>65 kg</span></div>
+          <div class="profile-row"><span>身高</span><span>170 cm</span></div>
+          <div class="profile-row" style="border:none"><span>活动量</span><span>轻度活动</span></div>
+          <button style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;font-size:13px">修改资料</button>
+        </div>
+        <div class="card">
+          <div class="section-h">健康模式</div>
+          <p style="font-size:22px;font-weight:700;color:var(--brand);margin-bottom:12px">减脂</p>
+          <button style="padding:8px 16px;border-radius:8px;border:1px solid var(--brand);background:var(--brand-light);color:var(--brand);font-size:13px">切换模式</button>
+        </div>
+        <div class="card">
+          <div class="section-h">今日目标</div>
+          <div class="profile-row"><span>热量</span><span>1800 kcal</span></div>
+          <div class="profile-row"><span>蛋白</span><span>95 g</span></div>
+        </div>
+        <nav class="tabbar">
+          <div class="tab"><span class="ico">◎</span>今日</div>
+          <div class="tab"><span class="ico">◎</span>记录</div>
+          <div class="tab on"><span class="ico">◉</span>我的</div>
+        </nav>
+      </div>
+
+      <!-- 趋势 -->
+      <div class="screen" data-id="trend">
+        <div class="nav-bar"><h1>7 日趋势</h1></div>
+        <div class="card">
+          <div class="section-h">本周热量 <span>日均 1620 kcal</span></div>
+          <div class="chart-placeholder">
+            <div class="bar" style="height:55%"></div>
+            <div class="bar" style="height:70%"></div>
+            <div class="bar" style="height:45%"></div>
+            <div class="bar" style="height:80%"></div>
+            <div class="bar" style="height:65%"></div>
+            <div class="bar" style="height:90%"></div>
+            <div class="bar" style="height:60%"></div>
+          </div>
+          <p style="margin-top:16px;font-size:14px;color:var(--brand);font-weight:600">比上周少摄入 8% · 继续保持</p>
+        </div>
+        <nav class="tabbar">
+          <div class="tab on"><span class="ico">◉</span>今日</div>
+          <div class="tab"><span class="ico">◎</span>记录</div>
+          <div class="tab"><span class="ico">◎</span>我的</div>
+        </nav>
+      </div>
+
+      <!-- 代谢模式首页 -->
+      <div class="screen" data-id="metabolic">
+        <div class="mode-stripe metabolic"></div>
+        <div class="nav-bar">
+          <div><h1>5月17日</h1><div class="sub">代谢管理</div></div>
+          <span class="pill warn">注意</span>
+        </div>
+        <div class="card hero-cal">
+          <div class="big">1286</div><span class="unit"> / 1700 kcal</span>
+          <div class="remain" style="color:var(--brand)">还可摄入 414 kcal</div>
+        </div>
+        <div class="card">
+          <div class="macro-row">
+            <span class="macro-label">钠</span>
+            <div class="macro-track"><div class="macro-fill" style="width:88%;background:var(--warn)"></div></div>
+            <span class="macro-val" style="color:var(--warn)">1760/2000</span>
+          </div>
+          <div class="macro-row">
+            <span class="macro-label">糖</span>
+            <div class="macro-track"><div class="macro-fill" style="width:72%;background:var(--macro-c)"></div></div>
+            <span class="macro-val">36/50g</span>
+          </div>
+          <p style="font-size:11px;color:var(--text-secondary);margin-top:12px">仅供参考，不能替代医疗建议</p>
+        </div>
+        <nav class="tabbar">
+          <div class="tab on"><span class="ico">◉</span>今日</div>
+          <div class="tab"><span class="ico">◎</span>记录</div>
+          <div class="tab"><span class="ico">◎</span>我的</div>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint-doc">设计规范详见 <a href="../PROTOTYPE.md">design/PROTOTYPE.md</a></p>
+
+  <script>
+    const screens = [
+      { id: 'home', label: '① 今日·达标' },
+      { id: 'home-warn', label: '② 今日·注意' },
+      { id: 'record', label: '③ 记录' },
+      { id: 'recognize', label: '④ 识别结果' },
+      { id: 'confirm', label: '⑤ 确认记录' },
+      { id: 'onboarding', label: '⑥ 引导' },
+      { id: 'profile', label: '⑦ 我的' },
+      { id: 'trend', label: '⑧ 7日趋势' },
+      { id: 'metabolic', label: '⑨ 代谢模式' },
+    ];
+    const nav = document.getElementById('nav');
+    const els = document.querySelectorAll('.screen');
+    screens.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.textContent = s.label;
+      if (i === 0) b.classList.add('active');
+      b.onclick = () => {
+        nav.querySelectorAll('button').forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        els.forEach((el) => el.classList.toggle('active', el.dataset.id === s.id));
+      };
+      nav.appendChild(b);
+    });
+  </script>
+</body>
+</html>
