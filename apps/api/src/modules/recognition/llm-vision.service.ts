@@ -143,7 +143,7 @@ export class LlmVisionService {
       baseUrl,
       model,
       provider,
-      timeoutMs: Number(this.config.get('LLM_TIMEOUT_MS') ?? 90_000),
+      timeoutMs: Number(this.config.get('LLM_TIMEOUT_MS') ?? 120_000),
     };
   }
 
@@ -167,16 +167,9 @@ export class LlmVisionService {
   }
 
   private buildPrompt(): string {
-    return `你是专业营养师与中餐菜品识别助手。请根据图片识别主要食物（1~3 种），估计一份可食用份量（克）与总热量（千卡，按该份量）。
-
-只输出 JSON，不要 markdown，格式：
-{"dishes":[{"name":"中文菜名","estimatedServingG":200,"confidence":0.85,"caloriesEstimate":350,"proteinG":12,"carbsG":40,"fatG":8,"notes":"可选说明"}]}
-
-规则：
-- name 用简体中文常见标准菜名（如：刀削面、牛肉面、米饭），避免冗长描述（不要写「肉末宽面汤」这类组合名，刀削面请直接写「刀削面」）
-- estimatedServingG 为 50~800 的整数
-- confidence 为 0~1
-- 若无法识别任何食物，返回 {"dishes":[]}`;
+    return `识别图中主要食物（最多3种），估计单份可食克数与热量。只输出 JSON：
+{"dishes":[{"name":"菜名","estimatedServingG":200,"confidence":0.85,"caloriesEstimate":350,"proteinG":12,"carbsG":40,"fatG":8}]}
+规则：name 用简短中文标准菜名；estimatedServingG 50~800；confidence 0~1；无法识别则 {"dishes":[]}`;
   }
 
   private buildRequestBody(
@@ -198,6 +191,7 @@ export class LlmVisionService {
       model: cfg.model,
       messages,
       stream: false,
+      max_tokens: 512,
     };
 
     if (cfg.provider === 'deepseek') {
@@ -205,6 +199,7 @@ export class LlmVisionService {
       body.response_format = { type: 'json_object' };
     } else if (cfg.provider === 'zhipu') {
       body.temperature = 0.2;
+      body.response_format = { type: 'json_object' };
     } else {
       body.temperature = 0.2;
       body.response_format = { type: 'json_object' };

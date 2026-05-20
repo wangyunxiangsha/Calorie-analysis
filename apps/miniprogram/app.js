@@ -2,7 +2,7 @@ const { ensureLogin } = require('./utils/auth');
 
 App({
   globalData: {
-    apiBase: 'http://localhost:3000/api/v1',
+    apiBase: 'https://calorie-analysis.preview.aliyun-zeabur.cn/api/v1',
   },
   onLaunch() {
     ensureLogin().catch(() => {

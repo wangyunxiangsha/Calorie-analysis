@@ -30,6 +30,8 @@ enum LogSource {
 
 enum RecognitionStatus {
   pending
+  processing
+  failed
   confirmed
   rejected
 }
@@ -122,6 +124,8 @@ model RecognitionTask {
   imageUrl     String            @map("image_url")
   candidates   Json              // [{ name, confidence, foodId? }]
   status       RecognitionStatus @default(pending)
+  provider     String?
+  errorMessage String?           @map("error_message")
   chosenFoodId String?           @map("chosen_food_id")
   createdAt    DateTime          @default(now()) @map("created_at")
   updatedAt    DateTime          @updatedAt @map("updated_at")

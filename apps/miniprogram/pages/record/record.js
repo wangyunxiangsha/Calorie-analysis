@@ -1,4 +1,5 @@
-const { request, requestLong } = require('../../utils/request');
+const { request } = require('../../utils/request');
+const { pollRecognitionTask } = require('../../utils/recognition-poll');
 
 const RECOGNITION_STORAGE_KEY = 'recognition_result';
 const SEARCH_PREFILL_KEY = 'record_search_prefill';
@@ -195,10 +196,20 @@ Page({
       count: 1,
       mediaType: ['image'],
       sourceType: ['camera', 'album'],
+      sizeType: ['compressed'],
       success: (res) => {
         const file = res.tempFiles[0];
-        this.analyzePhotoFile(file.tempFilePath, file.fileType || 'image');
+        this.compressAndAnalyze(file.tempFilePath, file.fileType || 'image');
       },
+    });
+  },
+
+  compressAndAnalyze(tempPath, fileType) {
+    wx.compressImage({
+      src: tempPath,
+      quality: 65,
+      success: (res) => this.analyzePhotoFile(res.tempFilePath, fileType),
+      fail: () => this.analyzePhotoFile(tempPath, fileType),
     });
   },
 
@@ -220,14 +231,23 @@ Page({
       encoding: 'base64',
       success: async (fileRes) => {
         try {
-          const result = await requestLong({
+          const { taskId } = await request({
             url: '/recognition/analyze',
             method: 'POST',
+            timeout: 60000,
             data: {
               imageBase64: fileRes.data,
               mimeType,
             },
           });
+
+          const result = await pollRecognitionTask(taskId, {
+            onProgress(elapsedMs) {
+              const sec = Math.max(1, Math.round(elapsedMs / 1000));
+              wx.showLoading({ title: `AI 识别中 ${sec}s…`, mask: true });
+            },
+          });
+
           wx.hideLoading();
           if (!result.candidates?.length) {
             wx.showModal({

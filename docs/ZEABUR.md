@@ -50,7 +50,7 @@ git push -u origin main
 
 ```env
 DATABASE_URL=postgresql://...   # 从 Postgres 服务「连接」复制
-PORT=3000
+# 不要手写 PORT=3000！Zeabur 默认注入 PORT=8080，网关只转发到该端口，写 3000 会 502
 JWT_SECRET=随机长字符串-至少32位
 ADMIN_JWT_SECRET=另一段随机字符串
 ZHIPU_API_KEY=你的智谱密钥
@@ -74,9 +74,31 @@ CORS_ORIGIN=https://你的-admin-xxx.zeabur.app
 
 - 在 API 服务的 **Connect** / **Service Binding** 中关联 PostgreSQL，或手动粘贴 `DATABASE_URL`。
 
-### 5. 首次部署后初始化数据
+### 5. 环境变量不要加在 PostgreSQL 上
 
-部署日志里应看到 `prisma migrate deploy` 成功。种子数据需执行一次：
+`WECHAT_APP_ID`、`JWT_SECRET`、`ZHIPU_API_KEY` 等必须写在 **calorie-analysis（API）** 服务的变量里。  
+若写在 **postgresql** 服务上，API 容器里 `echo $WECHAT_APP_ID` 为空，小程序会报「微信登录未配置」。
+
+在 API 容器内自检：
+
+```bash
+echo "APP_ID=[$WECHAT_APP_ID]"
+echo "SECRET_LEN=${#WECHAT_APP_SECRET}"
+echo "PORT=[$PORT]"
+```
+
+### 6. 502  on `/auth/wechat`
+
+| 原因 | 处理 |
+|------|------|
+| API 未监听 Zeabur 的 `PORT` | **删除** 环境变量里的 `PORT=3000`（Zeabur Git 部署默认 **8080**），Redeploy；日志应显示 `listening on ...:8080` |
+| 容器启动失败（migrate 报错） | 看 **calorie-analysis → Logs** |
+| 无法访问 `api.weixin.qq.com` | 在 API Terminal 用 `wget -qO- "https://api.weixin.qq.com"` 测试 |
+| 刚 Redeploy 未就绪 | 等 Running 后再试 `/api/v1/health` |
+
+### 7. 首次部署后初始化数据
+
+部署日志里应看到 `prisma migrate deploy` 成功（含 `recognition_async` 迁移：识别任务支持 `processing` / `failed` 状态）。种子数据需执行一次：
 
 1. API 服务 → **Terminal / Shell**（或 Zeabur CLI）。
 2. 执行：

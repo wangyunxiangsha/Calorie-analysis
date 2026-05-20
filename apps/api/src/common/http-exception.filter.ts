@@ -33,6 +33,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    const err = exception as Error;
+    console.error(`[INTERNAL_ERROR] requestId=${requestId}`, err?.stack ?? err);
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       error: { code: 'INTERNAL_ERROR', message: '服务器错误' },
       meta: { requestId },

@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../../common/current-user.decorator';
@@ -12,10 +20,15 @@ import { RecognitionService } from './recognition.service';
 export class RecognitionController {
   constructor(private readonly recognition: RecognitionService) {}
 
-  /** M2: upload image; M0 accepts imageUrl for dev */
+  /** 提交识别任务（异步），客户端轮询 GET tasks/:taskId */
   @Post('analyze')
-  analyze(@CurrentUser() user: User, @Body() dto: RecognizeDto) {
-    return this.recognition.analyze(user.id, dto);
+  startAnalyze(@CurrentUser() user: User, @Body() dto: RecognizeDto) {
+    return this.recognition.startAnalyze(user.id, dto);
+  }
+
+  @Get('tasks/:taskId')
+  getTask(@CurrentUser() user: User, @Param('taskId') taskId: string) {
+    return this.recognition.getTask(user.id, taskId);
   }
 
   @Post('feedback')

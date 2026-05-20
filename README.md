@@ -148,7 +148,8 @@ npm run dev:admin
 | GET | `/api/v1/food-logs/daily-summary?date=` | 指定日期汇总（默认今天） |
 | GET | `/api/v1/food-logs/weekly-trend?days=` | 7/14 日趋势 |
 | POST | `/api/v1/food-logs` | 新增饮食记录 |
-| POST | `/api/v1/recognition/analyze` | 拍照识别（餐图存 `uploads/meals`，返回可访问 URL） |
+| POST | `/api/v1/recognition/analyze` | 提交拍照识别任务，立即返回 `{ taskId, status: "processing" }` |
+| GET | `/api/v1/recognition/tasks/:taskId` | 轮询识别结果，`status`: `processing` / `completed` / `failed` |
 | POST | `/api/v1/admin/auth/login` | 后台登录 |
 
 ## 里程碑
@@ -173,7 +174,7 @@ LLM_VISION_MODEL=glm-4.6v
 LLM_PROVIDER=zhipu
 ```
 
-小程序拍照后将图片 **Base64** 上传至 `POST /recognition/analyze`，由 GLM 识别菜名与热量估算后匹配食物库。未配置密钥时自动降级为开发用 mock。
+小程序拍照后将图片 **Base64** 提交至 `POST /recognition/analyze` 创建任务，再轮询 `GET /recognition/tasks/:taskId` 获取结果（避免长连接超时）。由 GLM 识别菜名与热量估算后匹配食物库。未配置密钥时自动降级为开发用 mock。
 
 **说明：** DeepSeek V4 官方 API 目前为纯文本、不支持传图；拍照识别请使用 GLM、通义 VL 等多模态模型。
 

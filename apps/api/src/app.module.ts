@@ -23,7 +23,11 @@ import { StorageModule } from './modules/storage/storage.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: join(__dirname, '..', '..', '.env'),
+      // Production (Zeabur/Docker): use platform env only — no .env file in image.
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? undefined
+          : join(__dirname, '..', '..', '.env'),
     }),
     PrismaModule,
     StorageModule,

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { RecognitionStatus } from '@prisma/client';
@@ -10,24 +12,15 @@ import { StorageService } from '../storage/storage.service';
 import { LlmVisionService } from './llm-vision.service';
 import { CreateRecognitionFeedbackDto } from './dto/create-feedback.dto';
 import { RecognizeDto } from './dto/recognize.dto';
-
-type Candidate = {
-  name: string;
-  confidence: number;
-  foodId: string | null;
-  defaultServingG: number;
-  servingUnit: string;
-  llmEstimate?: {
-    calories?: number;
-    proteinG?: number;
-    carbsG?: number;
-    fatG?: number;
-    notes?: string;
-  };
-};
+import {
+  RecognitionAnalyzeResult,
+  RecognitionCandidate,
+} from './recognition.types';
 
 @Injectable()
 export class RecognitionService {
+  private readonly logger = new Logger(RecognitionService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly foods: FoodsService,
@@ -35,29 +28,113 @@ export class RecognitionService {
     private readonly storage: StorageService,
   ) {}
 
-  async analyze(userId: string, dto: RecognizeDto) {
-    const imageRef = await this.resolveImageRef(userId, dto);
+  /** 创建任务并后台识别，立即返回 taskId */
+  startAnalyze(userId: string, dto: RecognizeDto) {
+    return this.prisma.recognitionTask
+      .create({
+        data: {
+          userId,
+          imageUrl: '',
+          candidates: [],
+          status: RecognitionStatus.processing,
+        },
+      })
+      .then((task) => {
+        void this.runAnalyzeInBackground(task.id, userId, dto);
+        return { taskId: task.id, status: 'processing' as const };
+      });
+  }
+
+  async getTask(userId: string, taskId: string) {
+    const task = await this.prisma.recognitionTask.findFirst({
+      where: { id: taskId, userId },
+    });
+    if (!task) throw new NotFoundException('识别任务不存在');
+
+    if (task.status === RecognitionStatus.processing) {
+      return { taskId: task.id, status: 'processing' as const };
+    }
+
+    if (task.status === RecognitionStatus.failed) {
+      return {
+        taskId: task.id,
+        status: 'failed' as const,
+        errorMessage: task.errorMessage ?? '识别失败',
+      };
+    }
+
+    const candidates = (task.candidates as RecognitionCandidate[]) ?? [];
+    const top = candidates[0];
+    return {
+      taskId: task.id,
+      status: 'completed' as const,
+      candidates,
+      needsManualPick: !top?.foodId || (top?.confidence ?? 0) < 0.6,
+      provider: task.provider ?? 'unknown',
+    };
+  }
+
+  private runAnalyzeInBackground(
+    taskId: string,
+    userId: string,
+    dto: RecognizeDto,
+  ) {
+    return this.executeAnalyze(userId, dto)
+      .then(async (result) => {
+        const imageRef = await this.resolveImageRef(userId, dto);
+        await this.prisma.recognitionTask.update({
+          where: { id: taskId },
+          data: {
+            imageUrl: imageRef,
+            candidates: result.candidates as object,
+            provider: result.provider,
+            status: RecognitionStatus.pending,
+            errorMessage: null,
+          },
+        });
+      })
+      .catch(async (e) => {
+        const message = this.toErrorMessage(e);
+        this.logger.error(`Recognition task ${taskId} failed: ${message}`, e);
+        await this.prisma.recognitionTask.update({
+          where: { id: taskId },
+          data: {
+            status: RecognitionStatus.failed,
+            errorMessage: message,
+          },
+        });
+      });
+  }
+
+  private async executeAnalyze(
+    userId: string,
+    dto: RecognizeDto,
+  ): Promise<RecognitionAnalyzeResult> {
     const candidates = this.llmVision.isEnabled()
       ? await this.analyzeWithLlm(dto)
       : await this.analyzeWithMock(dto.imageUrl ?? '');
 
-    const task = await this.prisma.recognitionTask.create({
-      data: {
-        userId,
-        imageUrl: imageRef,
-        candidates: candidates as object,
-      },
-    });
-
     const top = candidates[0];
     return {
-      taskId: task.id,
+      taskId: '',
       candidates,
       needsManualPick: !top?.foodId || (top?.confidence ?? 0) < 0.6,
       provider: this.llmVision.isEnabled()
         ? this.llmVision.getProviderLabel()
         : 'mock',
     };
+  }
+
+  private toErrorMessage(e: unknown): string {
+    if (e instanceof HttpException) {
+      const body = e.getResponse();
+      if (typeof body === 'string') return body;
+      const message = (body as { message?: string | string[] }).message;
+      if (Array.isArray(message)) return message.join(', ');
+      if (message) return message;
+    }
+    if (e instanceof Error && e.message) return e.message;
+    return '识别失败，请稍后重试或改用手动搜索';
   }
 
   private async resolveImageRef(
@@ -72,7 +149,7 @@ export class RecognitionService {
     return dto.imageUrl?.trim() ?? '';
   }
 
-  private async analyzeWithLlm(dto: RecognizeDto): Promise<Candidate[]> {
+  private async analyzeWithLlm(dto: RecognizeDto): Promise<RecognitionCandidate[]> {
     const base64 = dto.imageBase64?.trim();
     if (!base64) {
       throw new BadRequestException(
@@ -89,11 +166,15 @@ export class RecognitionService {
       return [];
     }
 
-    const candidates: Candidate[] = [];
+    const candidates: RecognitionCandidate[] = [];
     const seenFoodIds = new Set<string>();
+    const matchRows = await Promise.all(
+      dishes.map((dish) => this.foods.matchFoodForRecognition(dish.name, 3)),
+    );
 
-    for (const dish of dishes) {
-      const matches = await this.foods.matchFoodForRecognition(dish.name, 3);
+    for (let i = 0; i < dishes.length; i++) {
+      const dish = dishes[i];
+      const matches = matchRows[i];
       const food = matches[0];
 
       if (food && !seenFoodIds.has(food.id)) {
@@ -162,12 +243,11 @@ export class RecognitionService {
     });
   }
 
-  /** 未配置 LLM 时降级：从 URL 路径猜菜名并匹配食物库 */
-  private async analyzeWithMock(imageUrl: string): Promise<Candidate[]> {
+  private async analyzeWithMock(imageUrl: string): Promise<RecognitionCandidate[]> {
     const mockName = this.mockDishName(imageUrl);
     const matches = await this.foods.fuzzyMatch(mockName, 5);
 
-    const candidates: Candidate[] = matches.map((food, i) => ({
+    const candidates: RecognitionCandidate[] = matches.map((food, i) => ({
       name: food.name,
       confidence: Math.max(0.5, 0.95 - i * 0.1),
       foodId: food.id,
