@@ -81,7 +81,7 @@ export class RecognitionService {
     if (isProcessing) {
       const ageMs = Date.now() - task.updatedAt.getTime();
       const jobTimeoutMs = Number(
-        process.env.RECOGNITION_JOB_TIMEOUT_MS ?? 150_000,
+        process.env.RECOGNITION_JOB_TIMEOUT_MS ?? 200_000,
       );
       if (ageMs > jobTimeoutMs) {
         return {

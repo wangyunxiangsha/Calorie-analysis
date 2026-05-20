@@ -207,7 +207,9 @@ Page({
   compressAndAnalyze(tempPath, fileType) {
     wx.compressImage({
       src: tempPath,
-      quality: 65,
+      quality: 50,
+      compressedWidth: 1280,
+      compressedHeight: 1280,
       success: (res) => this.analyzePhotoFile(res.tempFilePath, fileType),
       fail: () => this.analyzePhotoFile(tempPath, fileType),
     });

@@ -11,7 +11,7 @@ function sleep(ms) {
  */
 async function pollRecognitionTask(taskId, options = {}) {
   const intervalMs = 2000;
-  const maxWaitMs = 180000;
+  const maxWaitMs = 200000;
   const started = Date.now();
 
   while (Date.now() - started < maxWaitMs) {

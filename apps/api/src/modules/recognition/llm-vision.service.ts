@@ -53,12 +53,45 @@ export class LlmVisionService {
     mimeType = 'image/jpeg',
   ): Promise<LlmDishInsight[]> {
     const cfg = this.resolveConfig();
+    const base64Len = imageBase64.trim().length;
+    const approxKb = Math.round((base64Len * 3) / 4 / 1024);
+    this.logger.log(
+      `LLM vision start model=${cfg.model} image≈${approxKb}KB timeout=${cfg.timeoutMs}ms`,
+    );
+
+    try {
+      return await this.requestVision(cfg, imageBase64, mimeType);
+    } catch (e) {
+      if (this.isTimeoutError(e)) {
+        this.logger.warn(
+          `LLM vision timeout (${cfg.timeoutMs}ms), retrying once…`,
+        );
+        try {
+          return await this.requestVision(cfg, imageBase64, mimeType);
+        } catch (retryErr) {
+          if (this.isTimeoutError(retryErr)) {
+            throw new ServiceUnavailableException(
+              '大模型识别超时（图片过大或网络较慢），请换更小照片或改用手动搜索',
+            );
+          }
+          throw retryErr;
+        }
+      }
+      throw e;
+    }
+  }
+
+  private async requestVision(
+    cfg: LlmConfig,
+    imageBase64: string,
+    mimeType: string,
+  ): Promise<LlmDishInsight[]> {
     const dataUrl = this.toDataUrl(imageBase64, mimeType);
     const prompt = this.buildPrompt();
-
     const url = this.chatCompletionsUrl(cfg.baseUrl);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), cfg.timeoutMs);
+    const started = Date.now();
 
     try {
       const res = await fetch(url, {
@@ -76,7 +109,7 @@ export class LlmVisionService {
       if (!res.ok) {
         const errText = await res.text();
         this.logger.error(
-          `LLM vision HTTP ${res.status}: ${errText.slice(0, 500)}`,
+          `LLM vision HTTP ${res.status} (${Date.now() - started}ms): ${errText.slice(0, 500)}`,
         );
         if (this.isVisionUnsupportedError(errText)) {
           throw new ServiceUnavailableException(
@@ -97,7 +130,11 @@ export class LlmVisionService {
         throw new ServiceUnavailableException('大模型未返回识别结果');
       }
 
-      return this.parseDishes(content);
+      const dishes = this.parseDishes(content);
+      this.logger.log(
+        `LLM vision ok ${Date.now() - started}ms dishes=${dishes.length}`,
+      );
+      return dishes;
     } catch (e) {
       if (
         e instanceof ServiceUnavailableException ||
@@ -105,14 +142,19 @@ export class LlmVisionService {
       ) {
         throw e;
       }
-      if (e instanceof Error && e.name === 'AbortError') {
-        throw new ServiceUnavailableException('大模型识别超时，请稍后重试');
+      if (this.isTimeoutError(e)) {
+        this.logger.warn(`LLM vision aborted after ${Date.now() - started}ms`);
+        throw e;
       }
       this.logger.error('LLM vision failed', e);
       throw new ServiceUnavailableException('大模型识别失败，请改用手动搜索');
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  private isTimeoutError(e: unknown): boolean {
+    return e instanceof Error && e.name === 'AbortError';
   }
 
   private resolveApiKey(): string | undefined {
@@ -143,7 +185,7 @@ export class LlmVisionService {
       baseUrl,
       model,
       provider,
-      timeoutMs: Number(this.config.get('LLM_TIMEOUT_MS') ?? 120_000),
+      timeoutMs: Number(this.config.get('LLM_TIMEOUT_MS') ?? 180_000),
     };
   }
 
