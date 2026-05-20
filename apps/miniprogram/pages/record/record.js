@@ -244,7 +244,12 @@ Page({
           const result = await pollRecognitionTask(taskId, {
             onProgress(elapsedMs) {
               const sec = Math.max(1, Math.round(elapsedMs / 1000));
-              wx.showLoading({ title: `AI 识别中 ${sec}s…`, mask: true });
+              const hint =
+                sec >= 60 ? '（大模型较慢，请稍候）' : '';
+              wx.showLoading({
+                title: `AI 识别中 ${sec}s${hint}`,
+                mask: true,
+              });
             },
           });
 

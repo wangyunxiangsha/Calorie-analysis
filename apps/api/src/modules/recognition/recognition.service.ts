@@ -71,12 +71,26 @@ export class RecognitionService {
       };
     }
 
-    const candidates = (task.candidates as RecognitionCandidate[]) ?? [];
+    const candidates = Array.isArray(task.candidates)
+      ? (task.candidates as RecognitionCandidate[])
+      : [];
     const isProcessing =
       task.status === RecognitionStatus.processing ||
       (task.status === RecognitionStatus.pending && candidates.length === 0);
 
     if (isProcessing) {
+      const ageMs = Date.now() - task.updatedAt.getTime();
+      const jobTimeoutMs = Number(
+        process.env.RECOGNITION_JOB_TIMEOUT_MS ?? 150_000,
+      );
+      if (ageMs > jobTimeoutMs) {
+        return {
+          taskId: task.id,
+          status: 'failed' as const,
+          errorMessage:
+            '识别超时，请换一张更清晰的照片，或改用手动搜索食物',
+        };
+      }
       return { taskId: task.id, status: 'processing' as const };
     }
 
@@ -97,6 +111,15 @@ export class RecognitionService {
   ) {
     return this.executeAnalyze(userId, dto)
       .then(async (result) => {
+        if (result.candidates.length === 0) {
+          await this.markTaskFailed(
+            taskId,
+            '未识别到菜品，请换一张更清晰的照片，或手动搜索食物名称',
+          );
+          this.logger.warn(`Recognition task ${taskId}: no candidates from LLM`);
+          return;
+        }
+
         const imageRef = await this.resolveImageRef(userId, dto);
         const doneData = {
           imageUrl: imageRef,
@@ -124,29 +147,36 @@ export class RecognitionService {
             },
           });
         }
+        this.logger.log(
+          `Recognition task ${taskId} completed: ${result.candidates.length} candidate(s)`,
+        );
       })
       .catch(async (e) => {
         const message = this.toErrorMessage(e);
         this.logger.error(`Recognition task ${taskId} failed: ${message}`, e);
-        try {
-          await this.prisma.recognitionTask.update({
-            where: { id: taskId },
-            data: {
-              status: RecognitionStatus.rejected,
-              errorMessage: message,
-              candidates: [],
-            },
-          });
-        } catch {
-          await this.prisma.recognitionTask.update({
-            where: { id: taskId },
-            data: {
-              status: RecognitionStatus.rejected,
-              candidates: [],
-            },
-          });
-        }
+        await this.markTaskFailed(taskId, message);
       });
+  }
+
+  private async markTaskFailed(taskId: string, message: string) {
+    try {
+      await this.prisma.recognitionTask.update({
+        where: { id: taskId },
+        data: {
+          status: RecognitionStatus.rejected,
+          errorMessage: message,
+          candidates: [],
+        },
+      });
+    } catch {
+      await this.prisma.recognitionTask.update({
+        where: { id: taskId },
+        data: {
+          status: RecognitionStatus.rejected,
+          candidates: [],
+        },
+      });
+    }
   }
 
   private async executeAnalyze(

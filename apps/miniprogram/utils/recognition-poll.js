@@ -11,7 +11,7 @@ function sleep(ms) {
  */
 async function pollRecognitionTask(taskId, options = {}) {
   const intervalMs = 2000;
-  const maxWaitMs = 120000;
+  const maxWaitMs = 180000;
   const started = Date.now();
 
   while (Date.now() - started < maxWaitMs) {
@@ -39,7 +39,9 @@ async function pollRecognitionTask(taskId, options = {}) {
     await sleep(intervalMs);
   }
 
-  throw new Error('识别超时，请换一张更清晰的照片或改用手动搜索');
+  throw new Error(
+    '识别超时（约 3 分钟），请换光线更好的照片，或改用手动搜索食物',
+  );
 }
 
 module.exports = { pollRecognitionTask };
