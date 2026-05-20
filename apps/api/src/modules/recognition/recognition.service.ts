@@ -28,21 +28,29 @@ export class RecognitionService {
     private readonly storage: StorageService,
   ) {}
 
-  /** 创建任务并后台识别，立即返回 taskId */
-  startAnalyze(userId: string, dto: RecognizeDto) {
-    return this.prisma.recognitionTask
-      .create({
+  /** 创建任务并后台识别，立即返回 taskId（用 pending + 空 candidates，兼容未跑新枚举迁移的库） */
+  async startAnalyze(userId: string, dto: RecognizeDto) {
+    try {
+      const task = await this.prisma.recognitionTask.create({
         data: {
           userId,
           imageUrl: '',
           candidates: [],
-          status: RecognitionStatus.processing,
+          status: RecognitionStatus.pending,
         },
-      })
-      .then((task) => {
-        void this.runAnalyzeInBackground(task.id, userId, dto);
-        return { taskId: task.id, status: 'processing' as const };
       });
+      void this.runAnalyzeInBackground(task.id, userId, dto);
+      return { taskId: task.id, status: 'processing' as const };
+    } catch (e) {
+      this.logger.error('startAnalyze failed', e);
+      const msg = this.toErrorMessage(e);
+      if (msg.includes('recognition_tasks') || msg.includes('column')) {
+        throw new BadRequestException(
+          '数据库未更新，请在 Zeabur Terminal 执行: npx prisma migrate deploy',
+        );
+      }
+      throw e;
+    }
   }
 
   async getTask(userId: string, taskId: string) {
@@ -51,11 +59,11 @@ export class RecognitionService {
     });
     if (!task) throw new NotFoundException('识别任务不存在');
 
-    if (task.status === RecognitionStatus.processing) {
-      return { taskId: task.id, status: 'processing' as const };
-    }
-
-    if (task.status === RecognitionStatus.failed) {
+    if (
+      task.status === RecognitionStatus.rejected ||
+      task.errorMessage ||
+      task.status === RecognitionStatus.failed
+    ) {
       return {
         taskId: task.id,
         status: 'failed' as const,
@@ -64,6 +72,14 @@ export class RecognitionService {
     }
 
     const candidates = (task.candidates as RecognitionCandidate[]) ?? [];
+    const isProcessing =
+      task.status === RecognitionStatus.processing ||
+      (task.status === RecognitionStatus.pending && candidates.length === 0);
+
+    if (isProcessing) {
+      return { taskId: task.id, status: 'processing' as const };
+    }
+
     const top = candidates[0];
     return {
       taskId: task.id,
@@ -82,27 +98,54 @@ export class RecognitionService {
     return this.executeAnalyze(userId, dto)
       .then(async (result) => {
         const imageRef = await this.resolveImageRef(userId, dto);
-        await this.prisma.recognitionTask.update({
-          where: { id: taskId },
-          data: {
-            imageUrl: imageRef,
-            candidates: result.candidates as object,
-            provider: result.provider,
-            status: RecognitionStatus.pending,
-            errorMessage: null,
-          },
-        });
+        const doneData = {
+          imageUrl: imageRef,
+          candidates: result.candidates as object,
+          provider: result.provider,
+          status: RecognitionStatus.pending,
+          errorMessage: null,
+        };
+        try {
+          await this.prisma.recognitionTask.update({
+            where: { id: taskId },
+            data: doneData,
+          });
+        } catch (updateErr) {
+          this.logger.warn(
+            `Recognition task ${taskId} full update failed, retrying without optional columns`,
+            updateErr,
+          );
+          await this.prisma.recognitionTask.update({
+            where: { id: taskId },
+            data: {
+              imageUrl: imageRef,
+              candidates: result.candidates as object,
+              status: RecognitionStatus.pending,
+            },
+          });
+        }
       })
       .catch(async (e) => {
         const message = this.toErrorMessage(e);
         this.logger.error(`Recognition task ${taskId} failed: ${message}`, e);
-        await this.prisma.recognitionTask.update({
-          where: { id: taskId },
-          data: {
-            status: RecognitionStatus.failed,
-            errorMessage: message,
-          },
-        });
+        try {
+          await this.prisma.recognitionTask.update({
+            where: { id: taskId },
+            data: {
+              status: RecognitionStatus.rejected,
+              errorMessage: message,
+              candidates: [],
+            },
+          });
+        } catch {
+          await this.prisma.recognitionTask.update({
+            where: { id: taskId },
+            data: {
+              status: RecognitionStatus.rejected,
+              candidates: [],
+            },
+          });
+        }
       });
   }
 
