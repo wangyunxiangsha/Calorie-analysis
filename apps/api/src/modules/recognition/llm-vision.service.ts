@@ -177,7 +177,7 @@ export class LlmVisionService {
       this.config.get<string>('LLM_BASE_URL')?.trim() ||
       'https://open.bigmodel.cn/api/paas/v4';
     const model =
-      this.config.get<string>('LLM_VISION_MODEL')?.trim() || 'glm-4.6v';
+      this.config.get<string>('LLM_VISION_MODEL')?.trim() || 'glm-4v-flash';
     const provider = this.resolveProvider(baseUrl);
 
     return {

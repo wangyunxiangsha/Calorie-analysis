@@ -170,7 +170,7 @@ npm run dev:admin
 ```text
 ZHIPU_API_KEY=你的密钥
 LLM_BASE_URL=https://open.bigmodel.cn/api/paas/v4
-LLM_VISION_MODEL=glm-4.6v
+LLM_VISION_MODEL=glm-4v-flash
 LLM_PROVIDER=zhipu
 ```
 
